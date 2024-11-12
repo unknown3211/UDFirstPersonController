@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import { moveSpeed, turnSpeed, keybinds } from './settings';
+import { GameName, characterColor, characterDirectionalLightColor, characterPosition,
+        characterAmbientLightColor, moveSpeed, turnSpeed, keybinds }
+        from './settings';
 import Scene, { scene } from './scene';
 
 export var camera: THREE.PerspectiveCamera;
@@ -9,6 +11,7 @@ const keysPressed: { [key: string]: boolean } = {};
 let playerCube: THREE.Mesh;
 
 function Init() {
+    document.title = GameName;
     Scene();
 
     if (!scene) {
@@ -21,20 +24,20 @@ function Init() {
     renderer.setAnimationLoop(animate);
     document.body.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(characterAmbientLightColor, 0.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    const directionalLight = new THREE.DirectionalLight(characterDirectionalLightColor, 1);
     directionalLight.position.set(5, 10, 5).normalize();
     scene.add(directionalLight);
 
     const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const material = new THREE.MeshStandardMaterial({ color: characterColor });
     playerCube = new THREE.Mesh(geometry, material);
     playerCube.position.set(0, 0.5, 0);
     scene.add(playerCube);
 
-    camera.position.set(0, 1, 0);
+    camera.position.set(characterPosition.x, characterPosition.y, characterPosition.z);
     playerCube.add(camera);
 
     window.addEventListener('keydown', (e) => (keysPressed[e.key.toLowerCase()] = true));
