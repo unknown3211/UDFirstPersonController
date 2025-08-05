@@ -9,6 +9,7 @@ const renderer = new THREE.WebGLRenderer();
 const clock = new THREE.Clock();
 const keysPressed: { [key: string]: boolean } = {};
 let playerCube: THREE.Mesh;
+let mouseLocked = true;
 
 function Init() {
     document.title = GameName;
@@ -54,13 +55,6 @@ function updatePlayerMovement(deltaTime: number) {
         direction.z += moveSpeed * deltaTime;
     }
 
-    if (keysPressed[keybinds.left]) {
-        direction.x -= moveSpeed * deltaTime;
-    }
-    if (keysPressed[keybinds.right]) {
-        direction.x += moveSpeed * deltaTime;
-    }
-
     playerCube.position.add(playerCube.localToWorld(direction).sub(playerCube.position));
 }
 
@@ -73,11 +67,31 @@ function updateCameraRotation(deltaTime: number) {
     }
 }
 
+window.addEventListener('pointerlockchange', () => {
+    mouseLocked = document.pointerLockElement === renderer.domElement;
+})
+
+window.addEventListener('mousemove', (event: any) => {
+    const sensitivity = 0.002;
+    const deltaX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+    const deltaY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+    playerCube.rotation.y -= deltaX * sensitivity;
+    camera.rotation.x -= deltaY * sensitivity;
+    camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
+})
+
 function animate() {
     const deltaTime = clock.getDelta();
     updatePlayerMovement(deltaTime);
     updateCameraRotation(deltaTime);
     renderer.render(scene, camera);
+
+    if (mouseLocked) {
+        renderer.domElement.requestPointerLock();
+    } else {
+        document.exitPointerLock();
+    }
 }
 
 Init();
