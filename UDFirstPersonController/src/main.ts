@@ -1,15 +1,9 @@
 import * as THREE from 'three';
-import { GameName, characterColor, characterDirectionalLightColor, characterPosition,
-        characterAmbientLightColor, moveSpeed, turnSpeed, keybinds }
-        from './settings';
+import { GameName } from './settings';
 import Scene, { scene } from './scene';
+import { InitPlayer, updatePlayerMovement, updateCameraRotation, renderer, camera, mouseLocked } from './player';
 
-export var camera: THREE.PerspectiveCamera;
-const renderer = new THREE.WebGLRenderer();
 const clock = new THREE.Clock();
-const keysPressed: { [key: string]: boolean } = {};
-let playerCube: THREE.Mesh;
-let mouseLocked = true;
 
 function Init() {
     document.title = GameName;
@@ -19,78 +13,21 @@ function Init() {
         console.error("Scene is not initialized");
         return;
     }
-
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setAnimationLoop(animate);
-    document.body.appendChild(renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(characterAmbientLightColor, 0.5);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(characterDirectionalLightColor, 1);
-    directionalLight.position.set(5, 10, 5).normalize();
-    scene.add(directionalLight);
-
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({ color: characterColor });
-    playerCube = new THREE.Mesh(geometry, material);
-    playerCube.position.set(0, 0.5, 0);
-    scene.add(playerCube);
-
-    camera.position.set(characterPosition.x, characterPosition.y, characterPosition.z);
-    playerCube.add(camera);
-
-    window.addEventListener('keydown', (e) => (keysPressed[e.key.toLowerCase()] = true));
-    window.addEventListener('keyup', (e) => (keysPressed[e.key.toLowerCase()] = false));
+    InitPlayer();
+    animate();
 }
-
-function updatePlayerMovement(deltaTime: number) {
-    const direction = new THREE.Vector3(0, 0, 0);
-
-    if (keysPressed[keybinds.forward]) {
-        direction.z -= moveSpeed * deltaTime;
-    }
-    if (keysPressed[keybinds.backward]) {
-        direction.z += moveSpeed * deltaTime;
-    }
-
-    playerCube.position.add(playerCube.localToWorld(direction).sub(playerCube.position));
-}
-
-function updateCameraRotation(deltaTime: number) {
-    if (keysPressed[keybinds.turnLeft]) {
-        playerCube.rotation.y += turnSpeed * deltaTime;
-    }
-    if (keysPressed[keybinds.turnRight]) {
-        playerCube.rotation.y -= turnSpeed * deltaTime;
-    }
-}
-
-window.addEventListener('pointerlockchange', () => {
-    mouseLocked = document.pointerLockElement === renderer.domElement;
-})
-
-window.addEventListener('mousemove', (event: any) => {
-    const sensitivity = 0.002;
-    const deltaX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-    const deltaY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-    playerCube.rotation.y -= deltaX * sensitivity;
-    camera.rotation.x -= deltaY * sensitivity;
-    camera.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, camera.rotation.x));
-})
 
 function animate() {
+    requestAnimationFrame(animate);
+
     const deltaTime = clock.getDelta();
     updatePlayerMovement(deltaTime);
     updateCameraRotation(deltaTime);
+
     renderer.render(scene, camera);
 
     if (mouseLocked) {
         renderer.domElement.requestPointerLock();
-    } else {
-        document.exitPointerLock();
     }
 }
 
